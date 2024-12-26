@@ -14,6 +14,9 @@ import {
   getFundList,
   updateFund,
 } from "../store/reducers/fundReducer";
+import CardGenerator from "../components/CardGenerator";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const Fund = () => {
   const [pageLimit, setPageLimit] = useState(5);
@@ -78,7 +81,7 @@ const Fund = () => {
     console.log("Fund ---> ", fund);
   };
 
-  const handleClick = () => {
+  const handleClick = async () => {
     const newError = {
       name: fundData.name.trim() === "",
       address: fundData.address.trim() === "",
@@ -109,7 +112,19 @@ const Fund = () => {
             console.log(error);
           });
       } else {
-        dispatch(addFund(fundData))
+        const element = document.getElementById("user-card");
+
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          allowTaint: false,
+          useCORS: true,
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("landscape", "px", "a4");
+        pdf.addImage(imgData, "PNG", 10, 10, 580, 400);
+        const pdfBlob = pdf.output("blob");
+
+        dispatch(addFund({ fundData, pdfBlob }))
           .then((response) => {
             if (response.type === "addFund/fulfilled") {
               setShowModal(true);
@@ -270,7 +285,6 @@ const Fund = () => {
           </div>
         </div>
       </div>
-
       <div className="flex flex-col justify-between w-full bg-white mt-8">
         <div className="border-b flex justify-between p-6">
           <h1 className="text-xl text-gray-700 font-bold">Fund List</h1>
@@ -378,12 +392,13 @@ const Fund = () => {
                     </td>
                     <td className="border text-xs sm:text-sm md:text-base px-1 sm:px-4 py-4">
                       <div className="flex w-full items-center justify-center gap-2">
-                        <div
+                        <a
                           className="bg-green-600 p-2 cursor-pointer"
-                          onClick={() => handleDownload(fund)}
+                          href={fund.reciept}
+                          target="_blank"
                         >
                           <GoDownload size={18} color="white" />
-                        </div>
+                        </a>
                         <div
                           className="bg-indigo-700 p-2 cursor-pointer"
                           onClick={() => handleUpdate(fund)}
@@ -453,6 +468,7 @@ const Fund = () => {
           handleClick={() => setShowModal(false)}
         />
       )}
+      <CardGenerator selectedUser={fundData} />
     </div>
   );
 };

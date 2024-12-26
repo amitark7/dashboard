@@ -13,6 +13,8 @@
     "@lottiefiles/react-lottie-player": "^3.5.4",
     "@reduxjs/toolkit": "^2.3.0",
     "firebase": "^11.0.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",

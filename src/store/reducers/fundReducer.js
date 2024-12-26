@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { db } from "../../firebase/firebase.js";
+import { db, imageDb } from "../../firebase/firebase.js";
 import {
   addDoc,
   collection,
@@ -11,18 +11,28 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 export const addFund = createAsyncThunk(
   "addFund",
   async (data, { rejectWithValue }) => {
     try {
+      const storageRef = ref(
+        imageDb,
+        `DurgaPujaCards/${data.fundData?.name || "unknown"}_Card.pdf`
+      );
+      await uploadBytes(storageRef, data.pdfBlob);
+      const downloadURL = await getDownloadURL(storageRef);
+
       const docRef = await addDoc(collection(db, "funds"), {
-        ...data,
+        ...data.fundData,
+        reciept: downloadURL,
         createdAt: serverTimestamp(),
       });
 
-      return { id: docRef.id, ...data };
+      return { id: docRef.id, ...data.fundData, reciept: downloadURL };
     } catch (error) {
+      console.error("Error in addFund:", error.message);
       return rejectWithValue(error.message);
     }
   }
